@@ -23,6 +23,13 @@ def fetchOrders():
     if response.status_code == 200:
         orders = response.json().get("results", [])
         for order in orders:
-            print(order)
+            for item in order["order_items"]:
+                product = item["item"]
+                quantity = item["quantity"]
+                print(product["id"])
+                print(quantity)
     else:
         print(f"Error: {response.status_code} - {response.json()}")
+
+
+fetchOrders()
