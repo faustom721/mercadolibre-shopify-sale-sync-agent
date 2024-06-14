@@ -1,2 +1,4 @@
+*.pyc
 .env
 venv/*
+last_job.txt
