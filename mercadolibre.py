@@ -3,17 +3,30 @@ import requests
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
-from utils import saveLastJobDate, readLastJobDate
+from utils import save_last_job_date, read_last_job_date
 
 load_dotenv()
 
 
-def fetchOrders():
+def extract_shopify_identifier(product_id):
+    """
+    Extracts the Shopify identifier from a MercadoLibre product ID. We store this in the MercadoLibre products' description in the last line with the prefix "CSS-SHOP-ID:".
+    (Yes I know, ML has a custom field for this, but this is just simpler for now)
+    """
+    # Fetch the product's description
+    access_token = os.getenv("MERCADOLIBRE_ACCESS_TOKEN")
+    description_url = f"https://api.mercadolibre.com/items/{product_id}/description"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    response = requests.get(description_url, headers=headers)
+    description = response.json().get("plain_text", "")
+
+
+def fetch_orders():
     access_token = os.getenv("MERCADOLIBRE_ACCESS_TOKEN")
     user_id = os.getenv("MERCADOLIBRE_SELLER_ID")
 
     now = datetime.now().strftime("%Y-%m-%dT%H:%M:%S-03:00")
-    last_job_date = readLastJobDate()
+    last_job_date = read_last_job_date()
     if not last_job_date:
         last_job_date = (datetime.now() - timedelta(days=7)).strftime(
             "%Y-%m-%dT%H:%M:%S-03:00"
@@ -25,7 +38,7 @@ def fetchOrders():
 
     response = requests.get(orders_url, headers=headers)
 
-    saveLastJobDate(now)
+    save_last_job_date(now)
 
     # Check for successful response
     if response.status_code == 200:
@@ -34,11 +47,6 @@ def fetchOrders():
             for item in order["order_items"]:
                 product = item["item"]
                 quantity = item["quantity"]
-                print(product["id"])
-                print(product["title"])
-                print(quantity)
+                shopify_identifier = extract_shopify_identifier(product["id"])
     else:
         print(f"Error: {response.status_code} - {response.json()}")
-
-
-fetchOrders()
