@@ -1,14 +1,26 @@
 import os
 
 
-def save_last_job_date(datetime):
-    with open("last_job.txt", "w") as file:
-        file.write(datetime)
+def write_line_file(filename, line, mode="a"):
+    # Ensure the directory exists, if there is one
+    if "/" in filename:
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+
+    # Write the line to the file
+    with open(filename, mode) as file:
+        file.write(line + "\n")
 
 
-def read_last_job_date():
-    if not os.path.exists("last_job.txt"):
-        with open("last_job.txt", "w") as file:
-            file.write("")
-    with open("last_job.txt", "r") as file:
-        return file.read()
+def read_first_line_file(filename):
+    if not os.path.exists(filename):
+        return None
+    with open(filename, "r") as file:
+        line = file.readline().strip()
+        return line
+
+
+def remove_first_line_file(filename):
+    with open(filename, "r") as file:
+        lines = file.readlines()
+    with open(filename, "w") as file:
+        file.writelines(lines[1:])

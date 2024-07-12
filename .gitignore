@@ -2,3 +2,5 @@
 .env
 venv/*
 last_job.txt
+logs/*
+ml_sales_buffer.txt
