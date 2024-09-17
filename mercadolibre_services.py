@@ -40,9 +40,6 @@ def fetch_orders():
 
     response = requests.get(orders_url, headers=headers)
 
-    # Save the current date to the last job file so we can use it next time and not fetch the same orders again
-    write_line_file("last_job.txt", now, "w")
-
     # Check for successful response
     if response.status_code == 200:
         orders = response.json().get("results", [])
@@ -50,10 +47,20 @@ def fetch_orders():
             for item in order["order_items"]:
                 product = item["item"]
                 quantity = item["quantity"]
+                total = product["total_amount"]
                 shopify_identifier = extract_shopify_identifier(product["id"])
-                write_line_file(
-                    "ml_sales_buffer.txt",
-                    f"{order['id']},{shopify_identifier},{quantity}",
-                )
+                if shopify_identifier:
+                    write_line_file(
+                        "ml_sales_buffer.txt",
+                        f"{order['id']},{shopify_identifier},{quantity},{total}",
+                    )
+                else:
+                    write_line_file(
+                        f"logs/{datetime.now().strftime('%d-%m-%Y')}/mercadolibre_not_synced_orders.txt",
+                        f"{order['id']}",
+                    )
     else:
         print(f"Error: {response.status_code} - {response.json()}")
+
+    # Save the current date to the last job file so we can use it next time and not fetch the same orders again
+    write_line_file("last_job.txt", now, "w")
